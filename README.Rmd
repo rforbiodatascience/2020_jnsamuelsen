@@ -1,0 +1,14 @@
+---
+title: "Reproducible Data Analysis Framework Exercise"
+author: "Jeppe N. Samuelsen"
+date: "15 3 2020"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Description
+
+PCA analysis of BLOSUM62

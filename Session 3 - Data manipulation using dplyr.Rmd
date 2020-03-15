@@ -1,0 +1,318 @@
+---
+title: "Session 3 - Data manipulation using dplyr"
+author: "Jeppe N Samuelsen"
+date: "17 2 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Q1:
+Shows the numbers that are above in a tibble.
+
+Q2:
+Orders the numbers in x by ascending order.
+
+Q3:
+Orders the numbers in x by descending order.
+
+Q4:
+Orders the numbers in x by ascending order.
+
+Q5:
+Selects only the x column (variable).
+
+Q6:
+Selects only the y column (variable).
+
+Q7:
+Selects only the x column (variable) multiplied by -1.
+
+Q8:
+Selects the x column (variable) multiplied by -1 and the y column (variable) multiplied by -1.
+
+Q9:
+Adds a column with the variable x_dbl = 2*x.
+
+Q10:
+Adds a column with the variable x_dbl = 2 * x, and a column with the variable x_qdr = 2 * x_dbl.
+
+Q11:
+Summarizes the mean of x values in the column x_mu.
+
+Q12:
+Summarizes the max value of x values in the variable x_max.
+
+Q13:
+First groups the data by the lbl variable, then summarizes the mean of x (x_mu) and max of x (x_max).
+
+Q14:
+First groups the data by the lbl variable, then summarizes the number of counts (observations) in the tubble as the variable n.
+
+Q15:
+First groups the data by the lbl variable, then summarizes the number of counts (observations) in the lbl variable/column.
+
+```{r}
+install.packages("tidyverse")
+```
+
+
+Reading diabetes data file:
+```{r}
+library("tidyverse")
+diabetes_data <- read_csv(file = "data/diabetes.csv")
+```
+
+```{r}
+diabetes_data
+```
+
+Q1:
+403 observations and 19 variables
+
+Q2:
+It looks like a tidy dataset.
+The rules that must be satisfied are:
+1. Each variable must have its own column.
+2. Each observation must have its own row.
+3. Each value must have its own cell.
+
+Q3:
+The types of the different variables.
+
+T1:
+Changing variables height, weight, waist and hip from inches/pounds to cm/kg, rounding to 1 decimal
+```{r}
+diabetes_data <- diabetes_data %>% mutate(height = 2.54*height) %>% mutate(height = round(height, 1)) %>% mutate(weight = 0.454*weight) %>% mutate(weight = round(weight, 1)) %>% 
+mutate(waist = 2.54*waist) %>% mutate(waist = round(waist, 1)) %>% 
+mutate(hip = 2.54*hip) %>% mutate(hip = round(hip, 1))
+```
+
+Q4:
+```{r}
+diabetes_data %>% filter(weight < 100)
+```
+349 persons weigh less than 100 kg.
+
+Q5:
+```{r}
+diabetes_data %>% filter(weight > 100)
+```
+
+53 persons weigh more than 100 kg.
+
+Q6:
+```{r}
+diabetes_data %>% filter(weight > 100, height < 160)
+```
+2 persons weigh more than 100 kg and are less than 1.6 m in height.
+
+Q7:
+```{r}
+diabetes_data %>% filter(gender == "female", height > 180)
+```
+
+4 women are taller than 1.8m.
+
+Q8:
+```{r}
+diabetes_data %>% filter(gender == "male", height > 180)
+```
+
+51 men are taller than 1.8m.
+
+Q9:
+```{r}
+diabetes_data %>% filter(location == "Louisa", age > 30, gender == "female")
+```
+
+95 women from Louisa are older than 30.
+
+Q10:
+```{r}
+diabetes_data %>% filter(gender == "male", location == "Buckingham", height > 190)
+```
+
+5 males from Buckingham are taller than 1.9m.
+
+T2:
+Scatter plot of weight versus height and colored by gender for inhabitants of Louisa above the age of 40.
+```{r}
+scatter1 <- diabetes_data %>% filter(location == "Louisa", age > 40)
+ggplot(data = scatter1, mapping = aes(x = weight, y = height)) + 
+  geom_point() +
+  geom_point(aes(color = gender))
+```
+
+T3:
+Boxplot of height versus location stratified on gender for people above the age of 50.
+```{r}
+Box1 <- diabetes_data %>% filter(age > 50)
+ggplot(data = Box1, mapping = aes(x = location, y = height)) + 
+  geom_boxplot() +
+  geom_boxplot(aes(color = gender))
+```
+
+Q11:
+```{r}
+diabetes_data %>% summarise(min(age))
+```
+
+The youngest person is 19 years old.
+
+Q12:
+```{r}
+diabetes_data %>% summarise(max(age))
+```
+
+The oldest person is 92 years old.
+
+Q13:
+```{r}
+diabetes_data %>% filter(age == 20) %>% 
+  summarise(max(height))
+```
+
+Of the 20 years olds, the tallest person is 182.9 cm.
+
+Q14:
+```{r}
+diabetes_data %>% filter(age == 20) %>% summarise(min(height))
+```
+
+Of the 20 years olds, the shortest person is 147.3 cm.
+
+Q15:
+```{r}
+diabetes_data %>% 
+  select(starts_with("b"))
+```
+
+4 variables starts wtih a b.
+
+Q16:
+```{r}
+diabetes_data %>% 
+  select(contains("eight"))
+```
+
+2 variables contains the word eight.
+
+T4:
+Creating new variable where BMI is calculated:
+```{r}
+diabetes_data <- diabetes_data %>% mutate(BMI = weight/((height/100)^2))
+diabetes_data
+```
+
+T5:
+Creating a BMI_class variable:
+```{r}
+diabetes_data <- diabetes_data %>% 
+  mutate(BMI_class = case_when(BMI < 18.5 ~ "underweight", BMI >= 18.5 & BMI <= 24.9 ~ "normal weight", BMI >= 25.0 & BMI <= 29.9 ~ "overweight", BMI >= 30.0 & BMI <= 34.9 ~ "obese", BMI >= 35.0 & BMI <= 39.9 ~ "severe obesity", BMI >= 40 ~ "morbid obesity"))
+```
+
+Then making BMI_class a categorical class by "factor":
+```{r}
+diabetes_data <- diabetes_data %>%
+  mutate(BMI_class = factor(BMI_class,
+                            levels =  c("underweight", "normal weight", "overweight", "obese",
+                                        "severe obesity", "morbid obesity")))
+```
+
+T6:
+Making boxplot of hdl versus BMI_class:
+```{r}
+ggplot(data = diabetes_data, mapping = aes(x = BMI_class, y = hdl)) +
+  geom_boxplot()
+```
+
+Q17:
+High values of hdl is generally observed in underweight persons.
+
+T8:
+First, i create a variable called gender_discrete, where 0 corresponds to female and 1 corresponds to male.
+
+```{r}
+diabetes_data <- diabetes_data %>% 
+  mutate(gender_discrete = case_when(gender == "female" ~ 0, gender == "male" ~ 1))
+```
+
+(Deleting fail column):
+
+```{r}
+diabetes_data <- diabetes_data %>% select(-c(age_discrete))
+```
+
+Now we make a new BFP column where the BFP is calculated:
+```{r}
+diabetes_data <- diabetes_data %>%
+  mutate(BFP = 1.39*BMI+0.16*age-10.34*gender_discrete-9)
+```
+
+T8:
+Creating a waist-to-hip ratio:
+```{r}
+diabetes_data <- diabetes_data %>% 
+  mutate(WHR = waist/hip)
+```
+
+Q18:
+Scatterplot of BFP versus BMI:
+```{r}
+ggplot(data = diabetes_data, aes(x = BFP, y = BMI)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+Now, creating scatterplot of WHR versus BMI:
+```{r}
+ggplot(data = diabetes_data, aes(x = WHR, y = BMI)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+We can clearly see from the plots that body fat percentage (BFP) correlates well with BMI, while waist-to-hip ratio doesn't.
+
+Q19:
+```{r}
+diabetes_data %>%
+  filter(gender == "male")
+```
+
+```{r}
+diabetes_data %>%
+  filter(gender == "female")
+```
+
+169 males and 234 females in the dataset.
+
+Q20:
+```{r}
+diabetes_data %>% 
+  filter(gender == "male", location == "Buckingham")
+```
+
+```{r}
+diabetes_data %>% 
+  filter(gender == "male", location == "Louisa")
+```
+
+86 males from Buckingham and 83 males from Louisa.
+
+```{r}
+diabetes_data %>% 
+  filter(gender == "female", location == "Buckingham")
+```
+
+```{r}
+diabetes_data %>% 
+  filter(gender == "female", location == "Louisa")
+```
+
+114 females from Buckingham and 120 females from Louisa.
+
+Q21:
+

@@ -1,0 +1,233 @@
+---
+title: 'Session 4 - Data manipulation II: Long and wide data, joins, strings and factors'
+author: "Jeppe N Samuelsen"
+date: "24 2 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Q1:
+Primary keys uniquely identifies observations in its own table.
+Foreign keys uniquely identifies observations in another table.
+Surrogate keys are keys that are added to the table because it lacks some kind of primary key.
+
+Primary keys and forein keys typically form relations that are 1-to-many.
+
+Q2:
+Now assuming that we are working with two tables, x and y:
+
+The inner_join() matches pairs of observations from mutiple tables (eg. x and y) when their keys are equal.
+
+The left_join() keeps all observations from unique keys in x and matches with the observations of y that has a corresponding key in x.
+
+The right_join() keeps all observations from unique keys in y and matches with the observations of x that has a corresponding key in y.
+
+The full_join() keeps all observations in x and y.
+
+Semi- and anti-join works on observations, not variables (keys):
+
+The semi_join() keeps the observations of x that have a match in y.
+
+The anti_join() drops all observations in x that have a match in y.
+
+Q3:
+inner_join() would be:
+tribble(
+~key, ~val_x, val_y,
+1, "x1", "y1",
+2, "x2", "y2"
+)
+
+left_join() would be:
+tribble(
+~key, ~val_x, val_y,
+1, "x1", "y1",
+2, "x2", "y2"
+3, "x3", "NA"
+)
+
+right_join() would be:
+tribble(
+~key, ~val_x, val_y,
+1, "x1", "y1",
+2, "x2", "y2"
+4, "NA", "y3"
+)
+
+full_join() would be:
+tribble(
+~key, ~val_x, val_y,
+1, "x1", "y1",
+2, "x2", "y2"
+3, "x3", "NA"
+4, "NA", "y3"
+)
+
+semi_join() would be:
+tribble(
+~key, ~val_x,
+1, "x1",
+2, "x2"
+)
+
+anti_join() would be:
+tribble(
+~key, ~val_x,
+3, "x3"
+)
+
+Q4:
+Creating function, which returns a random dna string of length n:
+```{r}
+library(tidyverse)
+
+dna_string <- function() {
+  my_dna <- str_c(sample(x = c("A", "T", "C", "G"), size = 100, replace = TRUE), collapse = "")
+  }
+```
+Finding fraction of adenine in the dna:
+```{r}
+str_count(string = my_dna, pattern = "A")
+```
+
+25/100 = 1/4 of the bases in the string are adenines.
+
+Q5:
+Transcribing dna to rna
+```{r}
+my_rna <- my_dna %>% 
+  str_replace_all("T", "U")
+```
+Finding how many start codons in the rna:
+```{r}
+sum(str_detect(my_rna, "AUG"))
+```
+
+One start codon in the rna.
+
+Q6:
+Extracting first three and last three nucleotides of my_dna:
+```{r}
+first_3_bases <- str_sub(my_dna, 1, 3)
+last_3_bases <- str_sub(my_dna, -3, -1)
+```
+
+TCT encodes serine.
+
+TGT encodes cysteine.
+
+Q7:
+Choosing AAT as random codon:
+```{r}
+rand_codon <- "AAT"
+```
+Now splitting my_dna on the random codon:
+```{r}
+str_split(my_dna, rand_codon)
+```
+
+4 substrings are returned.
+
+Q8:
+A factor adds a level of information which makes you able to sort strings on other levels than alphabetical.
+For example, if we had a vector of the months of the year, it would not make sense to sort them alphabetically. However, we can make a new variable with the correct sorting of the months and use this variable to correctly sort vectors with months.
+
+Q9:
+```{r}
+factor(LETTERS)
+```
+```{r}
+factor(rep(LETTERS, 10))
+```
+
+This factor sorts alphabetically since no other factor level is given to the factor function.
+
+Q10:
+```{r}
+factor(rev(LETTERS))
+```
+
+```{r}
+factor(rev(LETTERS), levels = LETTERS)
+```
+
+The factor used is here still the alphabetically sorted alphabet, however the letters are reversed.
+
+Q11:
+The files are csv files with diabetes patient information.
+
+Q12:
+The function for reading csv files are called read_csv.
+
+Q13:
+Reading all files into separate variables and joining them together to recreate the diabetes data set:
+```{r}
+age <- read_csv("data/data/04_diabetes_id_age.csv")
+chol <- read_csv("data/data/04_diabetes_id_chol.csv")
+bp.1d <- read_csv("data/data/04_diabetes_id_bp.1d.csv")
+bp.1s <- read_csv("data/data/04_diabetes_id_bp.1s.csv")
+bp.2d <- read_csv("data/data/04_diabetes_id_bp.2d.csv")
+bp.2s <- read_csv("data/data/04_diabetes_id_bp.2s.csv")
+frame <- read_csv("data/data/04_diabetes_id_frame.csv")
+gender <- read_csv("data/data/04_diabetes_id_gender.csv")
+glyhb <- read_csv("data/data/04_diabetes_id_glyhb.csv")
+hdl <- read_csv("data/data/04_diabetes_id_hdl.csv")
+height <- read_csv("data/data/04_diabetes_id_height.csv")
+hip <- read_csv("data/data/04_diabetes_id_hip.csv")
+location <- read_csv("data/data/04_diabetes_id_location.csv")
+ratio <- read_csv("data/data/04_diabetes_id_ratio.csv")
+stab.glu <- read_csv("data/data/04_diabetes_id_stab.glu.csv")
+time.ppn <- read_csv("data/data/04_diabetes_id_time.ppn.csv")
+waist <- read_csv("data/data/04_diabetes_id_waist.csv")
+weight <- read_csv("data/data/04_diabetes_id_weight.csv")
+```
+
+Joining the separate files together can be accomplished by full joining in a pipe:
+
+```{r}
+diabetes <- chol %>% 
+  full_join(stab.glu, by = "id") %>% 
+  full_join(hdl, by = "id") %>% 
+  full_join(ratio, by = "id") %>%
+  full_join(glyhb, by = "id") %>% 
+  full_join(location, by = "id") %>% 
+  full_join(age, by = "id") %>% 
+  full_join(gender, by = "id") %>% 
+  full_join(height, by = "id") %>% 
+  full_join(weight, by = "id") %>% 
+  full_join(frame, by = "id") %>% 
+  full_join(bp.1s, by = "id") %>% 
+  full_join(bp.1d, by = "id") %>% 
+  full_join(bp.2s, by = "id") %>% 
+  full_join(bp.2d, by = "id") %>%
+  full_join(waist, by = "id") %>% 
+  full_join(hip, by = "id")
+  
+```
+
+Q14:
+The diabetes data we have created is wide data.
+
+Q15:
+The function select_if selects column based on a predicate. If the predicate is TRUE, the column(s) will be selected.
+
+Q16:
+Converting from wide to long data with pivot_longer:
+```{r}
+diabetes_data_long <- select_if(diabetes, is.numeric) %>%
+  pivot_longer(chol:hip, names_to = "attributes", values_to = "value")
+  
+```
+Now plotting:
+```{r}
+ggplot(diabetes_data_long, mapping = aes(x = id, y = value)) +
+  geom_point() +
+  facet_wrap(~attributes)
+```
+
+Q17:
+A histogram for each numerical variable would probably be a better way of presenting the data.
+

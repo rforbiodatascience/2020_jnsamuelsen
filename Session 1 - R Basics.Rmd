@@ -1,0 +1,113 @@
+---
+title: "Session 1 - R Basics"
+author: "Jeppe N Samuelsen"
+date: "7 2 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this section I will simulate a dice.
+
+I will start by defining a die that goes from 1 to 6.
+```{r}
+die <- 1:6
+
+die
+```
+
+We can roll the die with the function "sample" that takes two arguments:
+a vector x and a size.
+
+I will now roll the die two times.
+
+```{r}
+sample(x=die, size=2)
+```
+
+However that was without replacement so we can not get the same number in the two rolls.
+
+We can also roll the die with replacement:
+
+```{r}
+sample(x=die, size=2, replace=TRUE)
+```
+
+We can also add up the two rolls.
+
+```{r}
+dice <- sample(x=die, size=2, replace=TRUE)
+
+sum(dice)
+```
+
+The dice will give the same result every time (the result that was rolled when the dice was defined)
+
+```{r}
+dice
+
+dice
+
+dice
+```
+
+We will now create a function called roll(), which can roll new numbers every time it is called.
+
+Functions consist of a name, a body of code, and a set of arguments. The output of the function is the last line of the body of code (if the line has an output).
+
+We could make the roll function without any arguments, like this:
+
+```{r}
+roll <- function() {
+  die <- 1:6
+  dice <- sample(x=die, size=2, replace=TRUE)
+  sum(dice)
+}
+```
+
+We can now run this roll function.
+
+```{r}
+roll()
+```
+
+Typing the function name without the parenthesis will not run the function but just give the code of the function.
+
+```{r}
+roll
+
+roll()
+```
+
+We can also give our function arguments (think of them like input to the function). Like this:
+
+```{r}
+roll2 <- function(bones){
+  dice <- sample(x=bones, size=2, replace = TRUE)
+  sum(dice)
+}
+```
+
+When running the function we now need to input the argument "bones", which should be a vector to use as input in the sample function.
+
+```{r}
+roll2(bones = 1:4)
+roll2(bones = 1:6)
+roll2(1:20)
+```
+Now the function roll2 needs a supply of the bones vector, otherwise it will give an error message.
+
+We can prevent this error by supplying the function with a default bones value.
+
+```{r}
+roll2 <- function(bones = 1:6){
+  dice <- sample(x = bones, size = 2, replace = TRUE)
+  sum(dice)
+}
+
+roll2()
+```
+
+We have now created our own dice.

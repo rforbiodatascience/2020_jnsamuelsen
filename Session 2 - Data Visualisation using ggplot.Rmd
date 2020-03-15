@@ -1,0 +1,168 @@
+---
+title: "Session 2 - Data Visualisation using ggplot"
+author: "Jeppe N Samuelsen"
+date: "17 2 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We start by loading the needed libraries.
+
+```{r}
+library("tidyverse")
+library("datamicroarray")
+```
+
+We will now ready and wrangle the data for visualisation.
+
+```{r}
+data('gravier', package = 'datamicroarray')
+set.seed(676571)
+cancer_data=mutate(as_tibble(pluck(gravier,"x")),y=pluck(gravier,"y"),pt_id=1:length(pluck(gravier, "y")),age=round(rnorm(length(pluck(gravier,"y")),mean=55,sd=10),1))
+cancer_data=rename(cancer_data,event_label=y)
+cancer_data$age_group=cut(cancer_data$age,breaks=seq(10,100,by=10))
+```
+
+Looking at the first 8 rows and first 8 columns of the data.
+
+```{r}
+select(slice(cancer_data,1:8),pt_id,age,age_group,event_label,1:5)
+```
+
+Q1: The data set is a cancer data set, which comes from a microarray which gene expressions for persons of different age.
+
+Q2: We can see how many rows and columns which are in the data set by using nrow and ncol.
+```{r}
+nrow(cancer_data)
+ncol(cancer_data)
+```
+
+Q3: The variables corresponds to each column and the observations corresponds to each row.
+
+We will now plot 2 x 20 random normally distributed numbers.
+
+```{r}
+ggplot(data = tibble(x = rnorm(20), y = rnorm(20)),
+       mapping = aes(x = x, y = y)) +
+  geom_point()
+```
+
+T1:
+Scatterplot of age against g2E09.
+```{r}
+ggplot(data = cancer_data) +
+  geom_point(mapping = aes(x=age, y=g2E09))
+```
+
+T2:
+Lineplot of age against g2E09.
+```{r}
+ggplot(data = cancer_data) +
+  geom_line(mapping = aes(x=age, y=g2E09))
+```
+
+T3:
+Boxplot of g2E09.
+```{r}
+ggplot(data = cancer_data, mapping = aes(x = "", y = g2E09)) + 
+  geom_boxplot()
+```
+
+T4:
+Histogram of g2E09.
+```{r}
+ggplot(data = cancer_data, mapping = aes(x = g2E09)) + 
+  geom_histogram()
+```
+
+T5:
+Densitogram of g2E09.
+```{r}
+ggplot(data = cancer_data, mapping = aes(x = g2E09)) + 
+  geom_density()
+```
+
+Q4:
+All geoms do not require both x and y. Fx boxplot and histogram only requires one variable.
+
+T6:
+Boxplot of g2E09 stratified on the variable event_label.
+```{r}
+ggplot(data = cancer_data, mapping = aes(x = "", y = g2E09)) + 
+  geom_boxplot() +
+  facet_grid(~event_label)
+```
+
+T7:
+Densitogram of g2E09 stratifed on the variable event_label.
+```{r}
+ggplot(data = cancer_data, mapping = aes(x = g2E09)) + 
+  geom_density() +
+  facet_grid(~event_label)
+```
+
+T8:
+Boxplot of g2E09 stratifed on the variable age_group.
+```{r}
+p <- ggplot(data = cancer_data, mapping = aes(x = age_group, y = g2E09)) + 
+  geom_boxplot()
+```
+
+Then stratified on event_label with colors.
+```{r}
+p + geom_boxplot(aes(color = event_label)) + labs(x = "age group")
+```
+
+Now adding new x label.
+```{r}
+p + geom_boxplot(aes(color = event_label)) + labs(x = "age group")
+```
+
+
+T9:
+Scatterplot of g2E09 versus age and stratifed on event_label. Also adding smoothing line and labels.
+```{r}
+p1 <- ggplot(data = cancer_data, mapping = aes(x = age, y = g2E09)) + 
+  geom_point()
+p1 + geom_point(aes(color = event_label)) + labs(x = "age") + geom_smooth(mapping = aes(x=age, y = g2E09))
+```
+T10:
+Scatterplot of gene g2E09 versus gene g7F07 and stratifed on event_label. Also adding smoothing line and labels.
+```{r}
+p2 <- ggplot(data = cancer_data, mapping = aes(x = g2E09, y = g7F07)) + 
+  geom_point()
+p2 + geom_point(aes(color = event_label)) + geom_smooth(mapping = aes(x=g2E09, y = g7F07))
+```
+Then splitting into panes based on age group.
+```{r}
+p2 + geom_point(aes(color = event_label)) + geom_smooth(mapping = aes(x=g2E09, y = g7F07)) + facet_wrap(~ age_group)
+```
+Labeling titles.
+```{r}
+p2 + geom_point(aes(color = event_label)) + geom_smooth(mapping = aes(x=g2E09, y = g7F07)) + facet_wrap(~ age_group) + labs(color = "prognosis")
+```
+T11:
+Recreating boxplot:
+```{r}
+p3 <- ggplot(data = cancer_data, mapping = aes(x = event_label, y = g1CNS507, fill=event_label)) + 
+  geom_boxplot() +
+  coord_flip() +
+  labs(title = "A prognostic DNA signature for T1T2 node-negative breast cancer patients", subtitle = "Labelling: good = no event, poor = early metastasis", x = "Event after diagnosis", y = "Expression level of g1CNS507 (log2 transformed)")
+p3 + labs(fill = "")
+```
+
+Q5:
+It is visble that a higher level of the gene g1CNS507 gives a better chance of a good event after diagnosis.
+
+T12:
+Recreating plot:
+```{r}
+p4 <- ggplot(data = cancer_data, mapping = aes(x = age, y = g1int239, color = event_label)) + 
+  geom_point() +
+  geom_smooth(mapping = aes(x=age, y = g1int239, color = event_label), method = "lm", se = FALSE)
+p4 + labs(title = "A prognostic DNA signature for T1T2 node-negative breast cancer patients", subtitle = "Stratified on labelling: good = no event, poor = early metastasis", x = "Subject age", y = "Expression level of g1int239 (log2 transformed)", color = "Label")
+```
+

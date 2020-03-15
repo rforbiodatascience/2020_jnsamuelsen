@@ -1,0 +1,90 @@
+---
+title: "Session 4 - Modelling, dimension reduction and clustering"
+author: "Jeppe N Samuelsen"
+date: "7 3 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+T1:
+
+```{r}
+library("tidyverse")
+library("modelr")
+options(na.action = na.warn)
+diabetes_data <- read_csv(file = "data/diabetes.csv")
+```
+
+Convering height and weight to metric system:
+```{r}
+diabetes_data <- diabetes_data %>%
+  mutate(height = 2.54*height) %>%
+  mutate(height = round(height, 1)) %>%
+  mutate(weight = 0.454*weight) %>%
+  mutate(weight = round(weight, 1))
+```
+
+
+Recreating plot:
+```{r}
+ggplot(diabetes_data, mapping = aes(x = height, y = weight)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_grid(gender ~ location)
+```
+
+T2:
+Creating nested tibble:
+```{r}
+by_location <- diabetes_data %>%
+  group_by(location, gender) %>%
+  nest()
+```
+
+Creating weight model function:
+```{r}
+weight_model <- function(df) {
+  lm(weight ~ height, data = df)
+}
+```
+
+Defining models:
+```{r}
+models <- map(by_location$data, weight_model)
+```
+
+Applying the linear models to the all observations of the data frame:
+```{r}
+by_location <- by_location %>% 
+  mutate(model = map(data, weight_model))
+```
+
+T3:
+```
+
+Unnesting the tibble with broom::glance:
+```{r}
+by_location %>% 
+  mutate(glance = map(model, broom::glance)) %>% 
+  unnest(glance)
+```
+
+T4:
+Recreating tibble with broom::tidy:
+```{r}
+by_location_tidy <- by_location %>%  
+  mutate(tidy = map(model, broom::tidy)) %>% 
+  unnest(tidy)
+```
+
+T5:
+```{r}
+broom::confint_tidy(x = by_location_tidy, conf.level = 0.95)
+```
+
+T6:
+Recreating plot:
+
