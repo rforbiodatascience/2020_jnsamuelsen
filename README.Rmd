@@ -11,4 +11,4 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Description
 
-PCA analysis of BLOSUM62
+PCA analysis of BLOSUM62 amino acid substitution matrix
